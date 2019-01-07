@@ -260,7 +260,7 @@ def reset_camera_fixed(mesh):
     # focal length
     bpy.data.cameras['Camera'].lens = random.randint(25, 35)
     # cam position
-    d = random.uniform(2.4, 3.3)
+    d = random.uniform(2.6, 3.0)
     campos = Vector((0, 0, d))
     eul = Euler((0, 0, -1.570), 'XYZ')
 
@@ -275,6 +275,7 @@ def reset_camera_fixed(mesh):
         else:
             d+=0.1
             campos = Vector((0, 0, d))
+            camera.location=campos
             bpy.context.scene.update()
 
         id += 1
@@ -292,7 +293,7 @@ def reset_camera(mesh):
     # focal length
     bpy.data.cameras['Camera'].lens = random.randint(25, 35)
     # cam position
-    d = random.uniform(2.3, 3.3)
+    d = random.uniform(2.3, 3.0)
     campos = Vector((0, d, 0))
     eul = Euler((0, 0, 0), 'XYZ')
     eul.rotate_axis('Z', random.uniform(0, 3.1415))
@@ -427,6 +428,18 @@ def get_worldcoord_img(img_name):
 
     links.new(render_layers.outputs[0], file_output_node_0.inputs[0])
 
+def prepare_no_env_render():
+    # Remove lamp
+    for lamp in bpy.data.lamps:
+        bpy.data.lamps.remove(lamp, do_unlink=True)
+
+    world=bpy.data.worlds['World']
+    world.use_nodes = True
+    links = world.node_tree.links
+    # clear default nodes
+    for l in links:
+        links.remove(l)
+
 
 def render_pass(obj,objpath, texpath):
     # change output image name to obj file name + texture name + random three
@@ -465,7 +478,11 @@ def render_pass(obj,objpath, texpath):
     scene.cycles.samples = 1
     bpy.ops.render.render(write_still=False)
 
+    # save_blend_file
+    bpy.ops.wm.save_mainfile(filepath=path_to_output_blends+fn+'.blend')
+
     # render world coordinates
+    prepare_no_env_render()
     color_wc_material(obj,'wcColor')
     get_worldcoord_img(fn)
     bpy.ops.render.render(write_still=False)
@@ -473,6 +490,7 @@ def render_pass(obj,objpath, texpath):
     return fn
 
 def render_img(objpath, texpath):
+    bpy.ops.wm.read_factory_settings()
     prepare_scene()
     prepare_rendersettings()
 
@@ -490,10 +508,8 @@ def render_img(objpath, texpath):
         # plane_texturing(plane)
         fn = render_pass(mesh,objpath, texpath)
         # render()
-        # save_blend_file
-        bpy.ops.wm.save_mainfile(filepath=path_to_output_blends+fn+'.blend')
 
-        # return 0
+    # return 0
 
     # idx+=1
 
@@ -549,9 +565,9 @@ id2 = int(sys.argv[-1])
 with open(tex_list, 'r') as t, open(obj_list, 'r') as m:
     texlist = list(csv.reader(t))
     objlist = list(csv.reader(m))
-    print(objlist)
+    # print(objlist)
     for k in range(id1, id2):
-        print(k)
+        # print(k)
         objpath = objlist[k][0]
         idx = random.randint(0, len(texlist))
         texpath=texlist[idx][0]
