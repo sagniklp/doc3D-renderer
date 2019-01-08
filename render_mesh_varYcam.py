@@ -452,6 +452,11 @@ def prepare_no_env_render():
     for l in links:
         links.remove(l)
 
+    scene=bpy.data.scenes['Scene']
+    scene.cycles.samples=1
+    scene.cycles.use_square_samples=True
+    scene.view_settings.view_transform='Default'
+
 
 def render_pass(obj,objpath, texpath):
     # change output image name to obj file name + texture name + random three
@@ -480,6 +485,12 @@ def render_pass(obj,objpath, texpath):
     scene.cycles.samples=128
     bpy.ops.render.render(write_still=False)
 
+    # save_blend_file
+    bpy.ops.wm.save_mainfile(filepath=path_to_output_blends+fn+'.blend')
+
+    # prepare to render without environment
+    prepare_no_env_render()
+
     # remove img link
     links.remove(imglk)
     file_output_node_uv = tree.nodes.new('CompositorNodeOutputFile')
@@ -490,11 +501,7 @@ def render_pass(obj,objpath, texpath):
     scene.cycles.samples = 1
     bpy.ops.render.render(write_still=False)
 
-    # save_blend_file
-    bpy.ops.wm.save_mainfile(filepath=path_to_output_blends+fn+'.blend')
-
     # render world coordinates
-    prepare_no_env_render()
     color_wc_material(obj,'wcColor')
     get_worldcoord_img(fn)
     bpy.ops.render.render(write_still=False)
@@ -502,6 +509,7 @@ def render_pass(obj,objpath, texpath):
     return fn
 
 def render_img(objpath, texpath):
+    bpy.ops.wm.read_factory_settings()
     prepare_scene()
     prepare_rendersettings()
 
@@ -576,9 +584,9 @@ id2 = int(sys.argv[-1])
 with open(tex_list, 'r') as t, open(obj_list, 'r') as m:
     texlist = list(csv.reader(t))
     objlist = list(csv.reader(m))
-    print(objlist)
+    # print(objlist)
     for k in range(id1, id2):
-        print(k)
+        # print(k)
         objpath = objlist[k][0]
         idx = random.randint(0, len(texlist))
         texpath=texlist[idx][0]
