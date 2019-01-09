@@ -1,21 +1,21 @@
 % input directory and output directory
-src_dir = '/nfs/detection/kema/data/docwarp/fm1';
-dst_dir = '/nfs/detection/kema/data/docwarp/bm1';
+src_dir = '/media/hilab/sagniksSSD/Sagnik/DewarpNet/swat3d/uvmat/1/';
+dst_dir = '/media/hilab/sagniksSSD/Sagnik/DewarpNet/swat3d/bm/1/';
 
+files=dir(src_dir);
+n=length(files);
 % the loop should be modified based on how you organize your images
-for fid = 6 : 20
-    parfor k = 1 : 5200
-        % check if the output directory exists, otherwise, create one
-        t = fullfile(dst_dir, int2str(fid));
-        if ~exist(t, 'dir')
-            mkdir(t);
-        end
 
-        % check if the file exists
-        fname = fullfile(src_dir, int2str(fid), sprintf('DCX%d0001.mat', k));
-        if ~exist(fname, 'file')
-            continue;
-        end
+parfor k = 1 : n
+    % check if the output directory exists, otherwise, create one
+    %t = fullfile(dst_dir, int2str(fid));
+    t=dst_dir;
+    if ~exist(t, 'dir')
+        mkdir(t);
+    end
+    currf=files(k).name;
+    if contains(currf,'.mat')
+        fname = fullfile(src_dir, currf);
         disp(k);
         d = load(fname);
         % read uv
@@ -26,7 +26,7 @@ for fid = 6 : 20
         % compute backward mapping
         bm = uv2mp(uv);
         % save file (function save cannot be used with parfor, but the following can)
-        m=matfile(fullfile(t, sprintf('DCX%d0001.mat', k)), 'writable', true);
+        m=matfile(fullfile(t, currf), 'writable', true);
         m.bm = bm;
     end
 end

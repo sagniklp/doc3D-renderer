@@ -285,9 +285,7 @@ def reset_camera_varY(mesh):
             break
 
         else:
-            d+=0.1
-            campos = Vector((0, 0, d))
-            camera.location=campos
+            bpy.ops.transform.translate(value=(0,0,0.1))
             bpy.context.scene.update()
 
         id += 1
