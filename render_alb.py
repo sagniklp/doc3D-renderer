@@ -2,7 +2,7 @@
 Code for rendering the groundtruths of Doc3D dataset 
 https://www3.cs.stonybrook.edu/~cvl/projects/dewarpnet/storage/paper.pdf (ICCV 2019)
 
-This code renders the checkerboards using the .blend files 
+This code renders the albedo maps using the .blend files 
 saved from render_mesh.py 
 
 Written by: Sagnik Das
@@ -20,7 +20,6 @@ import math
 from mathutils import Vector, Euler
 import string
 
-
 def select_object(ob):
     bpy.ops.object.select_all(action='DESELECT')
     bpy.context.scene.objects.active = None
@@ -28,40 +27,12 @@ def select_object(ob):
     bpy.context.scene.objects.active = ob
 
 
-def render_img_newtex(texpath):
-    mesh_name=bpy.data.meshes[0].name
-    mesh=bpy.data.objects[mesh_name]
-    # mesh.select=True
-    select_object(mesh)
-    page_texturing(mesh, texpath)
-
-
-def page_texturing(mesh, texpath):
-    select_object(mesh)
-    bpy.ops.object.mode_set(mode="OBJECT")
-    bpy.ops.object.material_slot_add()
-    bpy.data.materials.new('Material.001')
-    mesh.material_slots[0].material=bpy.data.materials['Material.001']
-    mat = bpy.data.materials['Material.001']
-    mat.use_nodes = True
-    nodes = mat.node_tree.nodes
-    # clear default nodes
-    for n in nodes:
-        nodes.remove(n)
-    out_node=nodes.new(type='ShaderNodeOutputMaterial')
-    bsdf_node=nodes.new(type='ShaderNodeBsdfDiffuse')
-    texture_node=nodes.new(type='ShaderNodeTexImage')
-    
-    texture_node.image=bpy.data.images.load(texpath)
-
-    links=mat.node_tree.links
-    links.new(bsdf_node.outputs[0],out_node.inputs[0])
-    links.new(texture_node.outputs[0],bsdf_node.inputs[0])
-
-    bsdf_node.inputs[0].show_expanded=True
-    texture_node.extension='EXTEND'
-    texturecoord_node=nodes.new(type='ShaderNodeTexCoord')
-    links.new(texture_node.inputs[0],texturecoord_node.outputs[2])
+def prepare_rendersettings():
+    bpy.ops.object.select_all(action='DESELECT')
+    bpy.data.scenes['Scene'].cycles.device='CPU'
+    bpy.data.scenes['Scene'].render.resolution_x=448
+    bpy.data.scenes['Scene'].render.resolution_y=448
+    bpy.data.scenes['Scene'].render.resolution_percentage=100
 
 
 def render():
@@ -73,13 +44,12 @@ def render():
     bpy.ops.render.render(write_still=False)
 
 
-def get_albedo_img(img_name,texname):
+def get_albedo_img(img_name):
     scene=bpy.data.scenes['Scene']
     scene.render.layers['RenderLayer'].use_pass_diffuse_color=True
     bpy.context.scene.use_nodes = True
     tree = bpy.context.scene.node_tree
     links = tree.links
-
     # clear default nodes
     for n in tree.nodes:
         tree.nodes.remove(n)
@@ -91,7 +61,9 @@ def get_albedo_img(img_name,texname):
     comp_node = tree.nodes.new('CompositorNodeComposite')
 
     # file_output_node_0.format.file_format = 'OPEN_EXR'
-    out_path=os.path.join(path_to_output_alb)
+    out_path=path_to_output_alb
+    if not os.path.exists(out_path):
+        os.makedirs(out_path)
 	
     file_output_node.base_path = out_path
     file_output_node.file_slots[0].path = img_name
@@ -110,19 +82,14 @@ def prepare_no_env_render():
     for l in links:
         links.remove(l)
     scene=bpy.data.scenes['Scene']
-    scene.cycles.samples=1
-    scene.cycles.use_square_samples=True
     scene.view_settings.view_transform='Default'
-
 
 
 rridx=sys.argv[-3]
 strt=int(sys.argv[-2])
 end=int(sys.argv[-1])
-
-blend_list = './blendlists/blendlist{}.csv'.format(rridx)
-texpath = './recon_tex/chess48.png'
-path_to_output_alb = './recon/{}/'.format(rridx)
+path_to_output_alb = './alb/'+ str(rridx) + '/'
+blend_list = './blendlists/blendlist'+ str(rridx) +'.csv'
 
 if not os.path.exists(path_to_output_alb):
     os.makedirs(path_to_output_alb)
@@ -132,14 +99,10 @@ with open(blend_list,'r') as b:
 
 for bfile in blendlist[strt:end]:
     bfname=bfile[0]
+    fn=bfname.split('/')[-1][:-6]
     #load blend file 
     bpy.ops.wm.open_mainfile(filepath=bfname)
-
-    texname=texpath.split('/')[-1][:-4]
-    render_img_newtex(texpath)
-    fn=bfname.split('/')[-1][:-6]+texname
-    if os.path.isfile(os.path.join(path_to_output_alb,fn+'0001.png')):
-        continue
+    prepare_rendersettings()
     prepare_no_env_render()
-    get_albedo_img(fn,texname)
+    get_albedo_img(fn)
     render()

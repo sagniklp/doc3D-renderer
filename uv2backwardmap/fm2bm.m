@@ -1,6 +1,8 @@
-% input directory and output directory
-src_dir = '/media/hilab/sagniksSSD/Sagnik/DewarpNet/swat3d/uvmat/1/';
-dst_dir = '/media/hilab/sagniksSSD/Sagnik/DewarpNet/swat3d/bm/1/';
+% fm2bm - Call uv2mp in parallel
+% Author: Sagnik Das
+
+src_dir = '../uvmat/1/';
+dst_dir = '../bm/1/';
 
 files=dir(src_dir);
 n=length(files);

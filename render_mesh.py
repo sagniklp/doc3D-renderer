@@ -1,3 +1,20 @@
+'''
+Code for rendering the groundtruths of Doc3D dataset 
+https://www3.cs.stonybrook.edu/~cvl/projects/dewarpnet/storage/paper.pdf (ICCV 2019)
+
+This code renders the gts needed for the DewarpNet training (image, uv, 3D coordinates) 
+and saves the .blend files. The .blend files can be later used 
+to render other gts (normal, depth, checkerboard, albedo). 
+Each .blend file takes ~2.5MB set the save_blend_file flag to False if you don't need.
+
+Written by: Sagnik Das and Ke Ma
+Stony Brook University, New York
+December 2018
+'''
+
+
+import sys
+import csv
 import bpy
 import bmesh
 import random
@@ -5,26 +22,17 @@ import math
 from mathutils import Vector, Euler
 import os
 import string
+from bpy_extras.object_utils import world_to_camera_view
 
-rridx = 3
+rridx = 1
+save_blend_file=True
 
-path_to_output_images='/Users/debasmita/Documents/common_fold/mesh_render/img/' + str(rridx) + '/'
-path_to_output_uv = '/Users/debasmita/Documents/common_fold/mesh_render/uv/' + str(rridx) + '/'
-path_to_output_wc = '/Users/debasmita/Documents/common_fold/mesh_render/wc/' + str(rridx) + '/'
-path_to_output_blends='/Users/debasmita/Documents/common_fold/mesh_render/bld/' + str(rridx) + '/'
 
-for fd in [path_to_output_images, path_to_output_uv, path_to_output_blends]:
-    if not os.path.exists(fd):
-        os.makedirs(fd)
 
-# path_to_input_meshes='/nfs/bigdisk/kema/data/docwarp/dobj/'
+
 def reset_blend():
-    # bpy.ops.wm.read_factory_settings()
+    bpy.ops.wm.read_factory_settings()
     bpy.context.scene.cursor_location = (0.0, 0.0, 0.0)
-
-    # for scene in bpy.data.scenes:
-    #     for obj in scene.objects:
-    #         scene.objects.unlink(obj)
 
     # only worry about data in the startup scene
     for bpy_data_iter in (
@@ -36,9 +44,6 @@ def reset_blend():
         for id_data in bpy_data_iter:
             bpy_data_iter.remove(id_data, do_unlink=True)
 
-
-
-from bpy_extras.object_utils import world_to_camera_view
 
 def isVisible(mesh, cam):    
     bm = bmesh.new()   # create an empty BMesh
@@ -78,7 +83,6 @@ def select_object(ob):
 
 
 def prepare_scene():
-    # bpy.ops.wm.read_factory_settings()
     reset_blend()
 
     scene=bpy.data.scenes['Scene']
@@ -101,15 +105,8 @@ def prepare_rendersettings():
 
 def position_object(mesh_name):
     mesh=bpy.data.objects[mesh_name]
-    # mesh.select=True
     select_object(mesh)
-    # bpy.ops.object.origin_set(type='GEOMETRY_ORIGIN')
     mesh.rotation_euler=[0.0,0.0,0.0]
-    # mesh.scale=(45,45,45)
-
-    # mdim = mesh.dimensions
-    # s = 10. / max(mdim.x, mdim.y)
-    # mesh.scale=(s,s,s)
     return mesh
 
 def add_lighting():
@@ -133,11 +130,8 @@ def add_lighting():
         wlinks.new(texcoord.outputs[0], mapping.inputs[0])
         envnode=wnodes.new(type='ShaderNodeTexEnvironment')
         wlinks.new(mapping.outputs[0], envnode.inputs[0])
-        # envnode.image=bpy.data.images.load('D:/9C4A0034-a460e29cd9.exr')
         idx = random.randint(0, len(envlist) - 1)
         envp = envlist[idx]
-        # envp = ['D:/9C4A0003-e05009bcad.exr', 100]
-        # envp = ['D:/0001.hdr', 1]
         envnode.image = bpy.data.images.load(envp[0])
         envstr = int(envp[1])
         bg_node.inputs[1].default_value=random.uniform(0.4 * envstr, 0.6 * envstr)
@@ -171,6 +165,7 @@ def add_lighting():
         bbody.inputs[0].default_value=color_temp
         links.new(bbody.outputs[0],lamp_node.inputs[0])
 
+    ## Area Lighting 
     # bpy.ops.object.lamp_add(type='AREA')
     # lamp=bpy.data.objects[bpy.data.lamps[0].name]
     # select_object(lamp)
@@ -199,7 +194,7 @@ def add_lighting():
     # strngth=random.uniform(500,600)
     # lamp_node.inputs[1].default_value=strngth
     
-    # #Change warmness of light to simulate more natural lighting
+    ##Change warmness of light to simulate more natural lighting
     # bbody=nodes.new(type='ShaderNodeBlackbody')
     # color_temp=random.uniform(4000,9500)
     # bbody.inputs[0].default_value=color_temp
@@ -209,89 +204,6 @@ def add_lighting():
     # world.use_nodes = True
     # wnodes=world.node_tree.nodes
     # wlinks=world.node_tree.links
-
-    # #add random environment lighting
-    # # env=random.uniform(0,1)
-    # env = 0.9
-    # if  env>=0.4 and env<0.6:
-    #     bg_node=wnodes['Background']
-    #     h=random.uniform(0,1)
-    #     s=random.uniform(0,0.2)
-    #     v=random.uniform(0.1,0.4)
-    #     for node in wnodes:
-    #         if node.type=='COMBHSV':
-    #             wnodes.remove(node)
-    #     hsvnode=wnodes.new(type='ShaderNodeCombineHSV')
-    #     hsvnode.inputs[0].default_value=h
-    #     hsvnode.inputs[1].default_value=s
-    #     hsvnode.inputs[2].default_value=v
-    #     bg_node.inputs[1].default_value=random.uniform(0.2,0.7)
-    #     wlinks.new(hsvnode.outputs[0], bg_node.inputs[0])
-    # else:
-    #     print('no env')
-    #     for node in wnodes:
-    #         if node.type=='OUTPUT_WORLD':
-    #             continue
-    #         elif node.type=='BACKGROUND':
-    #             continue
-    #         else:
-    #             wnodes.remove(node)
-    #     bg_node=wnodes['Background']
-    #     # bg_node.inputs[1].default_value=random.uniform(0.2,0.4)
-    #     if env>=0.6:
-    #         # hdr lighting
-    #         envnode=wnodes.new(type='ShaderNodeTexEnvironment')
-    #         # envnode.image=bpy.data.images.load('D:/9C4A0034-a460e29cd9.exr')
-    #         # idx = random.randint(0, len(envlist) - 1)
-    #         # envp = envlist[idx]
-    #         envp = ['D:/9C4A0034-a460e29cd9.exr', 50]
-    #         # envp = ['D:/0001.hdr', 1]
-    #         envnode.image = bpy.data.images.load(envp[0])
-    #         bg_node.inputs[1].default_value=random.uniform(0.7 * envp[1], 1.3 * envp[1])
-    #         wlinks.new(envnode.outputs[0], bg_node.inputs[0])
-
-def reset_camera_varX(mesh):
-    bpy.ops.object.select_all(action='DESELECT')
-    camera=bpy.data.objects['Camera']
-    camera.select=True
-    # sample camera config until find a valid one
-    id = 0
-    vid = False
-    # focal length
-    bpy.data.cameras['Camera'].lens = random.randint(25, 35)
-    # cam position
-    d = random.uniform(2.3, 3)
-    campos = Vector((0, 0, d))
-    eul = Euler((0, 0, -1.570), 'XYZ')
-
-    camera.rotation_euler=eul
-    camera.location=campos
-
-    camera.constraints.new(type='DAMPED_TRACK')
-    camera.constraints['Damped Track'].target=mesh
-    camera.constraints['Damped Track'].track_axis='TRACK_NEGATIVE_Z'
-    # xt=random.uniform(-5.0,3.0)
-    xt=random.uniform(-1.0,1.0)
-    if xt <= 0.5 and xt >= -0.5 :
-        if xt < 0:
-            xt-=0.5
-        else:
-            xt+=0.5
-    bpy.ops.transform.translate(value=(xt,0,0))
-
-    while id < 50:
-        if isVisible(mesh, camera):
-            vid = True
-            break
-
-        else:
-            d+=0.1
-            campos = Vector((0, 0, d))
-            bpy.context.scene.update()
-
-        id += 1
-    print(d)
-    return vid
 
 
 def reset_camera(mesh):
@@ -337,8 +249,6 @@ def reset_camera(mesh):
 def page_texturing(mesh, texpath):
     select_object(mesh)
     bpy.ops.object.mode_set(mode="OBJECT")
-    #for material in bpy.data.materials:
-    #    bpy.data.materials.remove(material, do_unlink=True)
     bpy.ops.object.material_slot_add()
     bpy.data.materials.new('Material.001')
     mesh.material_slots[0].material=bpy.data.materials['Material.001']
@@ -387,6 +297,7 @@ def page_texturing(mesh, texpath):
 #     links.new(render_layers.outputs[0], file_output_node_0.inputs[0])
 #     return id_name
 
+
 def color_wc_material(obj,mat_name):
     # Remove lamp
     for lamp in bpy.data.lamps:
@@ -394,8 +305,6 @@ def color_wc_material(obj,mat_name):
 
     select_object(obj)
     # Add a new material
-    # bpy.ops.object.material_slot_remove()
-    # bpy.ops.object.material_slot_add()
     bpy.data.materials.new(mat_name)
     obj.material_slots[0].material=bpy.data.materials[mat_name]
     mat=bpy.data.materials[mat_name]
@@ -439,10 +348,27 @@ def get_worldcoord_img(img_name):
 
     links.new(render_layers.outputs[0], file_output_node_0.inputs[0])
 
+def prepare_no_env_render():
+    # Remove lamp
+    for lamp in bpy.data.lamps:
+        bpy.data.lamps.remove(lamp, do_unlink=True)
 
-def render_pass(obj,objpath, texpath):
+    world=bpy.data.worlds['World']
+    world.use_nodes = True
+    links = world.node_tree.links
+    # clear default nodes
+    for l in links:
+        links.remove(l)
+
+    scene=bpy.data.scenes['Scene']
+    scene.cycles.samples=1
+    scene.cycles.use_square_samples=True
+    scene.view_settings.view_transform='Default'
+
+
+def render_pass(obj, objpath, texpath):
     # change output image name to obj file name + texture name + random three
-#     # characters (upper lower alphabet and digits)
+    # characters (upper lower alphabet and digits)
     fn = objpath.split('/')[-1][:-4] + '-' + texpath.split('/')[-1][:-4] + '-' + \
         ''.join(random.sample(string.ascii_letters + string.digits, 3))
 
@@ -467,8 +393,17 @@ def render_pass(obj,objpath, texpath):
     scene.cycles.samples=128
     bpy.ops.render.render(write_still=False)
 
+    # save_blend_file
+    if save_blend_file:
+        bpy.ops.wm.save_mainfile(filepath=path_to_output_blends+fn+'.blend')
+
+    # prepare to render without environment
+    prepare_no_env_render()
+
     # remove img link
     links.remove(imglk)
+
+    # render 
     file_output_node_uv = tree.nodes.new('CompositorNodeOutputFile')
     file_output_node_uv.format.file_format = 'OPEN_EXR'
     file_output_node_uv.base_path = path_to_output_uv
@@ -487,83 +422,47 @@ def render_pass(obj,objpath, texpath):
 def render_img(objpath, texpath):
     prepare_scene()
     prepare_rendersettings()
-
     bpy.ops.import_scene.obj(filepath=objpath)
     mesh_name=bpy.data.meshes[0].name
     mesh=position_object(mesh_name)
-
     add_lighting()
-    v = reset_camera_varX(mesh)
+    v = reset_camera(mesh)
     if not v:
         return 1
     else:
         #add texture
         page_texturing(mesh, texpath)
-        # plane_texturing(plane)
-        fn = render_pass(mesh,objpath, texpath)
-        # render()
-        # save_blend_file
-        bpy.ops.wm.save_mainfile(filepath=path_to_output_blends+fn+'.blend')
-
-        # return 0
-
-    # idx+=1
-
-# def check_mesh(obj_name):
-#     prepare_scene()
-#     prepare_rendersettings()
-#     bpy.ops.import_scene.obj(filepath=obj_name)
-#     # bpy.ops.import_scene.obj(filepath=obj_name)
-#     mesh_name=bpy.data.meshes[0].name
-#     mesh=position_object(mesh_name, flip=False)
-
-#     v = reset_camera(mesh)
-#     if not v:
-#         return 0
-#     else:
-#         return 1
-
-import sys
-import csv
-# dst_dir = '/nfs/bigmind/kema/exp/dun/vm/'
-# oid = sys.argv[-1]
-
-# with open(os.path.join(dst_dir, '{}.csv'.format(oid)), 'w') as csvfile:
-#     writer = csv.writer(csvfile, delimiter=',')
-#     for k in range(1, 209):
-#         print(k)
-#         objfn = '{}_{}.obj'.format(oid, k)
-#         f = check_mesh(objfn)
-#         writer.writerow([objfn, f])
-
-        
-
-# idx=1
-# if __name__ == '__main__':
-#     for ii in range(1, 101):
-#         for jj in range(1, 209):
-#             obj_name=str(x)+'_'+str(y)+'.obj'
-#             f = check_meshes(obj_name)
-#             if f:
+        fn = render_pass(mesh, objpath, texpath)
 
 
-env_list = '/Users/debasmita/Documents/common_fold/mesh_render/env.csv'
+id1 = int(sys.argv[-2])
+id2 = int(sys.argv[-1])
+rridx = int(sys.argv[-3])
+
+path_to_output_images='./img/{}/'.format(rridx)
+path_to_output_uv = './uv/{}/'.format(rridx)
+path_to_output_wc = './wc/{}/'.format(rridx)
+if save_blend_file:
+    path_to_output_blends='./bld/{}/'.format(rridx)
+
+for fd in [path_to_output_images, path_to_output_uv, path_to_output_wc, path_to_output_blends]:
+    if not os.path.exists(fd):
+        os.makedirs(fd)
+
+env_list = './envs.csv'
+tex_list = './tex.csv'
+obj_list = './objs.csv'
+
 envlist = []
 with open(env_list, 'r') as f:
     envlist = list(csv.reader(f))
 
-tex_list = '/Users/debasmita/Documents/common_fold/mesh_render/page_tex.csv'
-obj_list = '/Users/debasmita/Documents/common_fold/mesh_render/ma.csv'
-
-id1 = int(sys.argv[-2])
-id2 = int(sys.argv[-1])
-
 with open(tex_list, 'r') as t, open(obj_list, 'r') as m:
     texlist = list(csv.reader(t))
     objlist = list(csv.reader(m))
-    print(objlist)
+    #print(objlist)
     for k in range(id1, id2):
-        print(k)
+        #print(k)
         objpath = objlist[k][0]
         idx = random.randint(0, len(texlist))
         texpath=texlist[idx][0]
@@ -573,16 +472,3 @@ with open(tex_list, 'r') as t, open(obj_list, 'r') as m:
         render_img(objpath, texpath)
 
 
-# render_img('I:/kema/data/docwarp/sobj/C/1/1_1_1.obj', 'D:/scan/vibrance/25.png')
-
-
-
-# # import sys
-# # import multiprocessing
-# # pool = multiprocessing.Pool(processes=24)
-# import csv
-# def render_batch(objlist, sid):
-#     with open('/home/kema/code/dun/page_tex.csv') as csv_file:
-#         csv_reader = csv.reader(csv_file)
-#         texlist = list(csv_reader)
-#     id = sid

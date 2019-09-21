@@ -1,5 +1,6 @@
 function invmap = uv2mp(uv)
 %uv2mp - Convert uv map to inverse map
+% Author: Ke Ma
 %
 % Syntax: invmap = uv2mp(uv)
 %

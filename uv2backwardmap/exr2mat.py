@@ -1,6 +1,20 @@
+'''
+Code for rendering the groundtruths of Doc3D dataset 
+https://www3.cs.stonybrook.edu/~cvl/projects/dewarpnet/storage/paper.pdf (ICCV 2019)
+
+This code converts the .exr files to .mat, 
+run it before running the fm2bm.m 
+
+Written by: Sagnik Das
+Stony Brook University, New York
+January 2019
+'''
+
 import cv2
 import numpy as np
 from hdf5storage import savemat
+
+rridx=sys.argv[-1]
 
 def saveasmat(file_path, dst_path):
     img = cv2.imread(file_path, cv2.IMREAD_ANYDEPTH | cv2.IMREAD_UNCHANGED)
@@ -10,8 +24,11 @@ import os
 import multiprocessing
 pool = multiprocessing.Pool(processes=2)
 
-src_dir = '/media/hilab/sagniksSSD/Sagnik/DewarpNet/swat3d/uv/1/'
-dst_dir = '/media/hilab/sagniksSSD/Sagnik/DewarpNet/swat3d/uvmat/1/'
+src_dir = '../uv/{}/'.format(rridx)
+dst_dir = '../uvmat/{}/'.format(rridx)
+
+if not os.path.exists(dst_dir):
+    os.makedirs(dst_dir)
 
 for fname in os.listdir(src_dir):
     if '.exr' in fname:
