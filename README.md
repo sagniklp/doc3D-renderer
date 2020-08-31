@@ -25,7 +25,7 @@ For your convenience, we already provide some sample meshes (`/obj`), HDR maps (
 	- Albedos (`/alb`): `blender --background --python render_alb.py -- <folder-id> <start-mesh> <end-mesh>`
 	- Normals (`/norm`): `blender --background --python render_norm.py -- <folder-id> <start-mesh> <end-mesh>`
 	- Depths (`/dmap`): `blender --background --python render_dmap.py -- <folder-id> <start-mesh> <end-mesh>`
-	- Checkerboard (`/norm`): `blender --background --python render_recon.py -- <folder-id> <start-mesh> <end-mesh>`
+	- Checkerboard (`/recon`): `blender --background --python render_recon.py -- <folder-id> <start-mesh> <end-mesh>`
 - Step 4: If you want to create the backward mappings from UV:
 	- `/uv2backwardmap` contains the necessary scripts. We use MatLab to do this.
 	- `python exr2mat.py <folder-id>`, converts the `.exr` files to `.mat` files.
