@@ -14,7 +14,7 @@ The download scripts of the dataset is available in [doc3D-dataset](https://gith
 	- c) Textures
 For your convenience, we already provide some sample meshes (`/obj`), HDR maps (`/env`) and textures (`/tex`). Each line is a path to a mesh, HDR map  and a texture.
 
-- Step 2: List the assets in `objs.csv`,`envs.csv`, and `texs.csv`.
+- Step 2: List the assets in `objs.csv`,`envs.csv`, and `texs.csv`. `laval_env.csv` is the example file for Laval HDR environment maps, note that the intensity multiplier is set to 100 to avoid dark images.  
 - Step 3a : Run the rendering code (for images, UVs, 3D coordinates):
 	- `blender --background --python render_mesh.py -- <folder-id> <start-mesh> <end-mesh>`
 	This command renders the images (`/img`), 3D coordinates (`/wc`) and UV (`/uv`) in folder `<folder-id>`. `<start-mesh>` and `<end-mesh>` refers to line numbers in `objs.csv` specifying the meshes to be used while rendering.
