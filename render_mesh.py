@@ -472,7 +472,7 @@ with open(tex_list, 'r') as t, open(obj_list, 'r') as m:
     for k in range(id1, id2):
         #print(k)
         objpath = objlist[k][0]
-        idx = random.randint(0, len(texlist))
+        idx = random.randrange(0, len(texlist))
         texpath=texlist[idx][0]
         print(objpath)
         print(texpath)
