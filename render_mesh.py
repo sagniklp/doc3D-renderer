@@ -22,6 +22,7 @@ import math
 from mathutils import Vector, Euler
 import os
 import string
+from pathlib import Path
 from bpy_extras.object_utils import world_to_camera_view
 
 rridx = 1
@@ -369,7 +370,7 @@ def prepare_no_env_render():
 def render_pass(obj, objpath, texpath):
     # change output image name to obj file name + texture name + random three
     # characters (upper lower alphabet and digits)
-    fn = objpath.split('/')[-1][:-4] + '-' + texpath.split('/')[-1][:-4] + '-' + \
+    fn = Path(objpath).stem + '-' + Path(texpath).stem + '-' + \
         ''.join(random.sample(string.ascii_letters + string.digits, 3))
 
     scene=bpy.data.scenes['Scene']
@@ -395,7 +396,7 @@ def render_pass(obj, objpath, texpath):
 
     # save_blend_file
     if save_blend_file:
-        bpy.ops.wm.save_mainfile(filepath=path_to_output_blends+fn+'.blend')
+        bpy.ops.wm.save_mainfile(filepath=os.path.join(path_to_output_blends, fn+'.blend'))
 
     # prepare to render without environment
     prepare_no_env_render()
@@ -435,15 +436,22 @@ def render_img(objpath, texpath):
         fn = render_pass(mesh, objpath, texpath)
 
 
+def ensure_abs_paths(csv_items):
+    for item in csv_items:
+        item = list(item)
+        item[0] = os.path.abspath(item[0])
+        yield item
+
+
 id1 = int(sys.argv[-2])
 id2 = int(sys.argv[-1])
 rridx = int(sys.argv[-3])
 
-path_to_output_images='./img/{}/'.format(rridx)
-path_to_output_uv = './uv/{}/'.format(rridx)
-path_to_output_wc = './wc/{}/'.format(rridx)
+path_to_output_images=os.path.abspath('./img/{}/'.format(rridx))
+path_to_output_uv = os.path.abspath('./uv/{}/'.format(rridx))
+path_to_output_wc = os.path.abspath('./wc/{}/'.format(rridx))
 if save_blend_file:
-    path_to_output_blends='./bld/{}/'.format(rridx)
+    path_to_output_blends=os.path.abspath('./bld/{}/'.format(rridx))
 
 for fd in [path_to_output_images, path_to_output_uv, path_to_output_wc, path_to_output_blends]:
     if not os.path.exists(fd):
@@ -455,11 +463,11 @@ obj_list = './objs.csv'
 
 envlist = []
 with open(env_list, 'r') as f:
-    envlist = list(csv.reader(f))
+    envlist = list(ensure_abs_paths(csv.reader(f)))
 
 with open(tex_list, 'r') as t, open(obj_list, 'r') as m:
-    texlist = list(csv.reader(t))
-    objlist = list(csv.reader(m))
+    texlist = list(ensure_abs_paths(csv.reader(t)))
+    objlist = list(ensure_abs_paths(csv.reader(m)))
     #print(objlist)
     for k in range(id1, id2):
         #print(k)

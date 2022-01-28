@@ -18,6 +18,7 @@ import bmesh
 import random
 import math
 import string
+from pathlib import Path
 
 
 def select_object(ob):
@@ -79,7 +80,7 @@ def get_depth_map(img_name):
 strt=int(sys.argv[-2])
 end=int(sys.argv[-1])
 rridx=sys.argv[-3]
-path_to_output_dmap = './dmap/{}/'.format(rridx)
+path_to_output_dmap = os.path.abspath('./dmap/{}/'.format(rridx))
 blend_list = './blendlists/blendlist{}.csv'.format(rridx)
 
 if not os.path.exists(path_to_output_dmap):
@@ -92,7 +93,7 @@ with open(blend_list,'r') as b:
 for bfile in blendlist[strt:end]:
     bpy.ops.wm.read_factory_settings()
     bfname=bfile[0]
-    fn=bfname.split('/')[-1][:-6]
+    fn=Path(bfname).stem
     bpy.ops.wm.open_mainfile(filepath=bfname)
     get_depth_map(fn)  
     render()

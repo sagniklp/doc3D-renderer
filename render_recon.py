@@ -19,6 +19,7 @@ import random
 import math
 from mathutils import Vector, Euler
 import string
+from pathlib import Path
 
 
 def select_object(ob):
@@ -111,7 +112,7 @@ def prepare_no_env_render():
     scene=bpy.data.scenes['Scene']
     scene.cycles.samples=1
     scene.cycles.use_square_samples=True
-    scene.view_settings.view_transform='Default'
+    scene.view_settings.view_transform='Standard'
 
 
 
@@ -120,8 +121,8 @@ strt=int(sys.argv[-2])
 end=int(sys.argv[-1])
 
 blend_list = './blendlists/blendlist{}.csv'.format(rridx)
-texpath = './recon_tex/chess48.png'
-path_to_output_alb = './recon/{}/'.format(rridx)
+texpath = os.path.abspath('./recon_tex/chess48.png')
+path_to_output_alb = os.path.abspath('./recon/{}/'.format(rridx))
 
 if not os.path.exists(path_to_output_alb):
     os.makedirs(path_to_output_alb)
@@ -134,9 +135,9 @@ for bfile in blendlist[strt:end]:
     #load blend file 
     bpy.ops.wm.open_mainfile(filepath=bfname)
 
-    texname=texpath.split('/')[-1][:-4]
+    texname=Path(texpath).stem
     render_img_newtex(texpath)
-    fn=bfname.split('/')[-1][:-6]+texname
+    fn=Path(bfname).stem+texname
     if os.path.isfile(os.path.join(path_to_output_alb,fn+'0001.png')):
         continue
     prepare_no_env_render()

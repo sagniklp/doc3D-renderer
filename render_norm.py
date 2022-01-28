@@ -20,6 +20,7 @@ import random
 import math
 from mathutils import Vector, Euler
 import string
+from pathlib import Path
 
 
 def select_object(ob):
@@ -111,7 +112,7 @@ end=int(sys.argv[-1])
 rridx=sys.argv[-3]
 
 blend_list = './blendlists/blendlist{}.csv'.format(rridx)
-path_to_output_norms= './norm/{}/'.format(rridx)
+path_to_output_norms= os.path.abspath('./norm/{}/'.format(rridx))
 
 if not os.path.exists(path_to_output_norms):
     os.makedirs(path_to_output_norms)
@@ -125,7 +126,7 @@ for bfile in blendlist[strt:end]:
     bfname=bfile[0]
     #load blend file 
     bpy.ops.wm.open_mainfile(filepath=bfname)
-    fn=bfname.split('/')[-1][:-6]
+    fn=Path(bfname).stem
     mesh=bpy.data.objects[bpy.data.meshes[0].name]
 
     # render world coordinates

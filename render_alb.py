@@ -19,6 +19,7 @@ import random
 import math
 from mathutils import Vector, Euler
 import string
+from pathlib import Path
 
 def select_object(ob):
     bpy.ops.object.select_all(action='DESELECT')
@@ -87,7 +88,7 @@ def prepare_no_env_render():
 rridx=sys.argv[-3]
 strt=int(sys.argv[-2])
 end=int(sys.argv[-1])
-path_to_output_alb = './alb/'+ str(rridx) + '/'
+path_to_output_alb = os.path.abspath('./alb/'+ str(rridx) + '/')
 blend_list = './blendlists/blendlist'+ str(rridx) +'.csv'
 
 if not os.path.exists(path_to_output_alb):
@@ -98,7 +99,7 @@ with open(blend_list,'r') as b:
 
 for bfile in blendlist[strt:end]:
     bfname=bfile[0]
-    fn=bfname.split('/')[-1][:-6]
+    fn=Path(bfname).stem
     #load blend file 
     bpy.ops.wm.open_mainfile(filepath=bfname)
     prepare_rendersettings()
