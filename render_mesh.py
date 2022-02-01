@@ -5,7 +5,7 @@ https://www3.cs.stonybrook.edu/~cvl/projects/dewarpnet/storage/paper.pdf (ICCV 2
 This code renders the gts needed for the DewarpNet training (image, uv, 3D coordinates) 
 and saves the .blend files. The .blend files can be later used 
 to render other gts (normal, depth, checkerboard, albedo). 
-Each .blend file takes ~2.5MB set the save_blend_file flag to False if you don't need.
+Each .blend file takes ~0.7MB. Set the save_blend_file flag to False if you don't need.
 
 Written by: Sagnik Das and Ke Ma
 Stony Brook University, New York
@@ -396,7 +396,8 @@ def render_pass(obj, objpath, texpath):
 
     # save_blend_file
     if save_blend_file:
-        bpy.ops.wm.save_mainfile(filepath=os.path.join(path_to_output_blends, fn+'.blend'))
+        bpy.ops.wm.save_mainfile(filepath=os.path.join(path_to_output_blends, fn+'.blend'),
+            compress=True)
 
     # prepare to render without environment
     prepare_no_env_render()
