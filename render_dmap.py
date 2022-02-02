@@ -18,13 +18,14 @@ import bmesh
 import random
 import math
 import string
+from pathlib import Path
 
 
 def select_object(ob):
     bpy.ops.object.select_all(action='DESELECT')
-    bpy.context.scene.objects.active = None
-    ob.select=True
-    bpy.context.scene.objects.active = ob
+    bpy.context.view_layer.objects.active = None
+    ob.select_set(True)
+    bpy.context.view_layer.objects.active = ob
 
 
 def render():
@@ -38,8 +39,8 @@ def render():
 
 def prepare_no_env_render():
     # Remove lamp
-    for lamp in bpy.data.lamps:
-        bpy.data.lamps.remove(lamp, do_unlink=True)
+    for lamp in bpy.data.lights:
+        bpy.data.lights.remove(lamp, do_unlink=True)
 
     world=bpy.data.worlds['World']
     world.use_nodes = True
@@ -50,7 +51,7 @@ def prepare_no_env_render():
     scene=bpy.data.scenes['Scene']
     scene.cycles.samples=1
     scene.cycles.use_square_samples=True
-    scene.view_settings.view_transform='Default'
+    scene.view_settings.view_transform='Standard'
 
 
 def get_depth_map(img_name):
@@ -72,14 +73,14 @@ def get_depth_map(img_name):
     file_output_node.base_path = path_to_output_dmap
     file_output_node.file_slots[0].path = img_name
 
-    links.new(render_layers.outputs[2], file_output_node.inputs[0])    
+    links.new(render_layers.outputs['Depth'], file_output_node.inputs[0])    
 
 
 
 strt=int(sys.argv[-2])
 end=int(sys.argv[-1])
 rridx=sys.argv[-3]
-path_to_output_dmap = './dmap/{}/'.format(rridx)
+path_to_output_dmap = os.path.abspath('./dmap/{}/'.format(rridx))
 blend_list = './blendlists/blendlist{}.csv'.format(rridx)
 
 if not os.path.exists(path_to_output_dmap):
@@ -92,7 +93,7 @@ with open(blend_list,'r') as b:
 for bfile in blendlist[strt:end]:
     bpy.ops.wm.read_factory_settings()
     bfname=bfile[0]
-    fn=bfname.split('/')[-1][:-6]
+    fn=Path(bfname).stem
     bpy.ops.wm.open_mainfile(filepath=bfname)
     get_depth_map(fn)  
     render()

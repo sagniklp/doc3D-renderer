@@ -20,13 +20,14 @@ import random
 import math
 from mathutils import Vector, Euler
 import string
+from pathlib import Path
 
 
 def select_object(ob):
     bpy.ops.object.select_all(action='DESELECT')
-    bpy.context.scene.objects.active = None
-    ob.select=True
-    bpy.context.scene.objects.active = ob
+    bpy.context.view_layer.objects.active = None
+    ob.select_set(True)
+    bpy.context.view_layer.objects.active = ob
 
 
 def render():
@@ -39,8 +40,8 @@ def render():
 
 def color_norm_material(obj,mat_name):
     # Remove lamp
-    for lamp in bpy.data.lamps:
-        bpy.data.lamps.remove(lamp, do_unlink=True)
+    for lamp in bpy.data.lights:
+        bpy.data.lights.remove(lamp, do_unlink=True)
 
     select_object(obj)
     # Add a new material
@@ -90,8 +91,8 @@ def get_normal_img(img_name):
 
 def prepare_no_env_render():
     # Remove lamp
-    for lamp in bpy.data.lamps:
-        bpy.data.lamps.remove(lamp, do_unlink=True)
+    for lamp in bpy.data.lights:
+        bpy.data.lights.remove(lamp, do_unlink=True)
 
     world=bpy.data.worlds['World']
     world.use_nodes = True
@@ -102,7 +103,7 @@ def prepare_no_env_render():
     scene=bpy.data.scenes['Scene']
     scene.cycles.samples=1
     scene.cycles.use_square_samples=True
-    scene.view_settings.view_transform='Default'
+    scene.view_settings.view_transform='Standard'
 
 
 # read args
@@ -111,7 +112,7 @@ end=int(sys.argv[-1])
 rridx=sys.argv[-3]
 
 blend_list = './blendlists/blendlist{}.csv'.format(rridx)
-path_to_output_norms= './norm/{}/'.format(rridx)
+path_to_output_norms= os.path.abspath('./norm/{}/'.format(rridx))
 
 if not os.path.exists(path_to_output_norms):
     os.makedirs(path_to_output_norms)
@@ -125,7 +126,7 @@ for bfile in blendlist[strt:end]:
     bfname=bfile[0]
     #load blend file 
     bpy.ops.wm.open_mainfile(filepath=bfname)
-    fn=bfname.split('/')[-1][:-6]
+    fn=Path(bfname).stem
     mesh=bpy.data.objects[bpy.data.meshes[0].name]
 
     # render world coordinates

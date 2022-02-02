@@ -19,13 +19,14 @@ import random
 import math
 from mathutils import Vector, Euler
 import string
+from pathlib import Path
 
 
 def select_object(ob):
     bpy.ops.object.select_all(action='DESELECT')
-    bpy.context.scene.objects.active = None
-    ob.select=True
-    bpy.context.scene.objects.active = ob
+    bpy.context.view_layer.objects.active = None
+    ob.select_set(True)
+    bpy.context.view_layer.objects.active = ob
 
 
 def render_img_newtex(texpath):
@@ -74,8 +75,7 @@ def render():
 
 
 def get_albedo_img(img_name,texname):
-    scene=bpy.data.scenes['Scene']
-    scene.render.layers['RenderLayer'].use_pass_diffuse_color=True
+    bpy.context.view_layer.use_pass_diffuse_color=True
     bpy.context.scene.use_nodes = True
     tree = bpy.context.scene.node_tree
     links = tree.links
@@ -95,13 +95,13 @@ def get_albedo_img(img_name,texname):
 	
     file_output_node.base_path = out_path
     file_output_node.file_slots[0].path = img_name
-    links.new(render_layers.outputs[21], file_output_node.inputs[0])
-    links.new(render_layers.outputs[21], comp_node.inputs[0])
+    links.new(render_layers.outputs['DiffCol'], file_output_node.inputs[0])
+    links.new(render_layers.outputs['DiffCol'], comp_node.inputs[0])
 
 def prepare_no_env_render():
     # Remove lamp
-    for lamp in bpy.data.lamps:
-        bpy.data.lamps.remove(lamp, do_unlink=True)
+    for lamp in bpy.data.lights:
+        bpy.data.lights.remove(lamp, do_unlink=True)
 
     world=bpy.data.worlds['World']
     world.use_nodes = True
@@ -112,7 +112,7 @@ def prepare_no_env_render():
     scene=bpy.data.scenes['Scene']
     scene.cycles.samples=1
     scene.cycles.use_square_samples=True
-    scene.view_settings.view_transform='Default'
+    scene.view_settings.view_transform='Standard'
 
 
 
@@ -121,8 +121,8 @@ strt=int(sys.argv[-2])
 end=int(sys.argv[-1])
 
 blend_list = './blendlists/blendlist{}.csv'.format(rridx)
-texpath = './recon_tex/chess48.png'
-path_to_output_alb = './recon/{}/'.format(rridx)
+texpath = os.path.abspath('./recon_tex/chess48.png')
+path_to_output_alb = os.path.abspath('./recon/{}/'.format(rridx))
 
 if not os.path.exists(path_to_output_alb):
     os.makedirs(path_to_output_alb)
@@ -135,9 +135,9 @@ for bfile in blendlist[strt:end]:
     #load blend file 
     bpy.ops.wm.open_mainfile(filepath=bfname)
 
-    texname=texpath.split('/')[-1][:-4]
+    texname=Path(texpath).stem
     render_img_newtex(texpath)
-    fn=bfname.split('/')[-1][:-6]+texname
+    fn=Path(bfname).stem+texname
     if os.path.isfile(os.path.join(path_to_output_alb,fn+'0001.png')):
         continue
     prepare_no_env_render()
